@@ -252,6 +252,47 @@
         const CLOUDINARY_CLOUD_NAME = 'dxazjkw9n';
         const CLOUDINARY_API_KEY = '888793991962194';
         const CLOUDINARY_API_SECRET = 'nx9BCBYGhEJ6yswbk63IDNCwS'; // Note: In production, keep this secure on backend only
+
+        // FIREBASE CONFIGURATION - Replace with your actual Firebase config
+        const firebaseConfig = {
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com", 
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Database Configuration
+        const USE_FIREBASE = false; // Set to true when you configure Firebase
+        let db = null;
+
+        // Initialize Firebase
+        async function initFirebase() {
+            if (USE_FIREBASE) {
+                try {
+                    // Check if Firebase config is set
+                    if (firebaseConfig.apiKey === 'your-api-key') {
+                        console.log('⚠️ Firebase not configured. Using localStorage fallback.');
+                        return false;
+                    }
+
+                    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
+                    const { getFirestore, collection, addDoc, getDocs, orderBy, query, limit } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+                    
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    window.firestoreFunctions = { collection, addDoc, getDocs, orderBy, query, limit };
+                    
+                    console.log('✅ Firebase initialized successfully');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Firebase initialization failed:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
         
         let submissions = [];
         let isUploading = false;
@@ -434,6 +475,8 @@
                 document.getElementById('shroomieForm').reset();
                 showSuccessMessage();
                 
+                console.log('Submission completed successfully');
+                
             } catch (error) {
                 console.error('Submission error:', error);
                 showErrorMessage('Failed to submit: ' + error.message);
@@ -518,6 +561,18 @@
                 document.getElementById('imageUrl').value = '';
             }
         });
+
+        // Load stored submissions when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Shroomie Gallery loading...');
+            await loadStoredSubmissions();
+        });
+
+        // Also load submissions immediately in case DOMContentLoaded already fired
+        if (document.readyState !== 'loading') {
+            console.log('🚀 DOM ready, loading submissions...');
+            loadStoredSubmissions();
+        }
     </script>
 </body>
 </html>
